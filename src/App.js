@@ -1,25 +1,54 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+
+import { AppContainer } from './components/styled-components/App';
+import { Sidebar } from './components/styled-components/Sidebar';
+import DevItem from './components/DevItem';
+import DevForm from './components/DevForm';
+import { Main } from './components/styled-components/Main';
+
+import api from './services/api';
+import Loading from './components/Loading';
 
 function App() {
+  const [devs, setDevs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDevs() {
+      const response = await api.get('/devs');
+
+      setDevs(response.data.devs);
+      setLoading(false);
+    }
+    loadDevs();
+  }, []);
+
+  const handleSubmit = async data => {
+    const response = await api.post('/dev', data);
+
+    if (response) {
+      setDevs([...devs, response.data.dev]);
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppContainer>
+      <Sidebar>
+        <strong>Cadastrar</strong>
+        <DevForm onSubmit={handleSubmit} />
+      </Sidebar>
+      <Main>
+        {loading ? (
+          <Loading />
+        ) : (
+          <ul>
+            {devs.map(dev => (
+              <DevItem key={dev._id} dev={dev} />
+            ))}
+          </ul>
+        )}
+      </Main>
+    </AppContainer>
   );
 }
 
